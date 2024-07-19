@@ -35,6 +35,6 @@ event OfferAccepted(address indexed sender, uint96 id, uint256 indexed amount);
 event LoanRepayment(address indexed sender, uint96 id, uint256 amount);
 event UpdateLoanableToken(
     address indexed _token,
-    address _priceFeed,
+    bytes32 _priceFeed,
     address indexed sender
 );

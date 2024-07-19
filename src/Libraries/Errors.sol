@@ -37,3 +37,4 @@ error Protocol__InsufficientCollateralDeposited();
 error Protocol__RepayAmountExceedsDebt();
 error Protocol__LoanNotServiced();
 error Protocol__InvalidAmount();
+error Protocol__InvalidAddress();

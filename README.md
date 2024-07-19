@@ -3,6 +3,7 @@
 <img src="image/logo.jpeg" alt="peerlend Logo" />
 
 
+
 ## Inspiration
 
 In the rapidly evolving world of decentralized finance (_DeFi_), platforms like **Aave** and **Compound** have paved the way for accessible borrowing and lending. However, these platforms often leave users feeling constrained. Borrowers are subjected to inflexible interest rates and limited options, while lenders lack the assurance of truly personalized engagements. **What if there was a way to revolutionize this space, giving users unprecedented control and flexibility over their financial transactions?** This question sparked the creation of **PeerLend**.
@@ -106,3 +107,9 @@ Welcome to **PeerLend**, a robust web3 P2P lending and borrowing platform where 
 - **Gemini AI**: Integrated for AI-driven content generation.
 
 By combining these advanced tools and features, **PeerLend** aims to deliver a user-centric, secure, and flexible
+
+## Contract Address
+- **$PEER address** 0xEFB354B7d482FB0b7fD01e4bDDAE61CBFb7b7Bb5
+- **Governance address** 0xA42A2E1C236BC4100DA8b3A4D68adEb24e9D22A7
+- **Proxy Address** 0x75Ed4Ac64a775815999FcBf007D25AcCD72311f1
+- **Protocol address**git 0x3E6CB45B040Dd06614b4245E29b6ba46db938C45

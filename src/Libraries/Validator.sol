@@ -11,8 +11,8 @@ library Validator {
         }
     }
 
-    function _isTokenAllowed(address _token, mapping(address => address) storage s_priceFeeds) internal view {
-        if (s_priceFeeds[_token] == address(0)) {
+    function _isTokenAllowed(address _token, mapping(address => bytes32) storage s_priceFeeds) internal view {
+        if (s_priceFeeds[_token] == bytes32(0)) {
             revert Protocol__TokenNotAllowed();
         }
     }

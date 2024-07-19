@@ -5,7 +5,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import {Validator} from "./Libraries/Validator.sol";
 import {PeerToken} from "./PeerToken.sol";
 import "./Libraries/Constant.sol";
@@ -28,7 +29,7 @@ contract Protocol is
     PeerToken private s_PEER;
 
     /// @dev maps collateral token to their price feed
-    mapping(address token => address priceFeed) private s_priceFeeds;
+    mapping(address token => bytes32 priceFeed) private s_priceFeeds;
     /// @dev maps address of a token to see if it is loanable
     mapping(address token => bool isLoanable) private s_isLoanable;
     /// @dev maps user to the value of balance he has collaterised
@@ -45,6 +46,8 @@ contract Protocol is
     address[] private s_loanableToken;
     /// @dev Collection of all all the resquest;
     Request[] private s_requests;
+
+    IPyth pyth;
 
     address[] allAddress;
     /// @dev request id;
@@ -129,7 +132,7 @@ contract Protocol is
     ) external {
         Validator._moreThanZero(_amountOfCollateral);
         Validator._isTokenAllowed(_tokenCollateralAddress, s_priceFeeds);
-        checkIsVerified(msg.sender);
+
         s_addressToCollateralDeposited[msg.sender][
             _tokenCollateralAddress
         ] += _amountOfCollateral;
@@ -206,9 +209,7 @@ contract Protocol is
 
     function repayLoan(uint96 _requestId, uint256 _amount) public {
         checkIsVerified(msg.sender);
-        // string memory _email = addressToUser[msg.sender].email;
 
-        // _sendMailRepayLoan(_email);
         Request storage _foundRequest = request[msg.sender][_requestId];
         uint256 _repaymentValueUsd = getUsdValue(
             _foundRequest.loanRequestAddr,
@@ -221,7 +222,6 @@ contract Protocol is
         if (_loanToken.balanceOf(msg.sender) < _amount)
             revert Protocol__InsufficientBalance();
 
-        // protocol only pays what is remaining without taking excess user token
         if (_foundRequest._totalRepayment >= _repaymentValueUsd) {
             _foundRequest._totalRepayment -= _repaymentValueUsd;
         } else {
@@ -234,10 +234,6 @@ contract Protocol is
         }
 
         _loanToken.transferFrom(msg.sender, _foundRequest.lender, _amount);
-
-        // uint256 _repaymentValueUsd = getUsdValue(_foundRequest.tokenAddr, _amount);
-
-        // userloanAmount[msg.sender][_foundRequest.tokenAddr] -= _amount;
 
         emit LoanRepayment(msg.sender, _requestId, _amount);
     }
@@ -336,7 +332,6 @@ contract Protocol is
         _foundRequest.lender = _foundOffer.author;
         _foundRequest.status = Status.SERVICED;
         _foundOffer.offerStatus = OfferStatus.ACCEPTED;
-        // _foundRequest.disbursementTimestamp = block.timestamp;  // Timestamp for interest accrual start
 
         uint256 _totalRepayment = _calculateLoanInterest(
             _foundOffer.returnDate,
@@ -365,8 +360,6 @@ contract Protocol is
     /// @dev handle the rejection of an offer
     /// @param _foundOffer the offer being sent
     function _handleRejectedOffer(Offer storage _foundOffer) internal {
-        // string memory _email = addressToUser[msg.sender].email;
-        // _sendMailRejectOffer(_email);
         _foundOffer.offerStatus = OfferStatus.REJECTED;
     }
 
@@ -381,9 +374,6 @@ contract Protocol is
     ) external {
         checkIsVerified(msg.sender);
         Request storage _foundRequest = request[_borrower][_requestId];
-        // string memory _email = addressToUser[msg.sender].email;
-
-        // _sendMailServiceLoan(_email);
         if (_foundRequest.status != Status.OPEN)
             revert Protocol__RequestNotOpen();
         if (_foundRequest.loanRequestAddr != _tokenAddress)
@@ -476,7 +466,7 @@ contract Protocol is
     /// @param _priceFeeds Array of price feed addresses for the new collateral tokens
     function addCollateralTokens(
         address[] memory _tokens,
-        address[] memory _priceFeeds
+        bytes32[] memory _priceFeeds
     ) external onlyOwner {
         checkIsVerified(msg.sender);
         if (_tokens.length != _priceFeeds.length) {
@@ -499,7 +489,7 @@ contract Protocol is
     ) external onlyOwner {
         checkIsVerified(msg.sender);
         for (uint8 i = 0; i < _tokens.length; i++) {
-            s_priceFeeds[_tokens[i]] = address(0);
+            s_priceFeeds[_tokens[i]] = bytes32(0);
             for (uint8 j = 0; j < s_collateralToken.length; j++) {
                 if (s_collateralToken[j] == _tokens[i]) {
                     s_collateralToken[j] = s_collateralToken[
@@ -520,7 +510,7 @@ contract Protocol is
     /// @param _priceFeed the address of the currency pair on chainlink
     function addLoanableToken(
         address _token,
-        address _priceFeed
+        bytes32 _priceFeed
     ) external onlyOwner {
         s_isLoanable[_token] = true;
         s_priceFeeds[_token] = _priceFeed;
@@ -547,6 +537,16 @@ contract Protocol is
         addressToUser[_user].isVerified = _status;
         addressToUser[_user].email = _email;
     }
+
+    /**
+     * @notice This method updates the price feeds with the latest prices.
+     * @param priceUpdate The encoded data to update the contract with the latest price.
+     */
+    function updatePriceFeeds(bytes[] calldata priceUpdate) external payable {
+        uint fee = pyth.getUpdateFee(priceUpdate);
+        pyth.updatePriceFeeds{ value: fee }(priceUpdate);
+    }
+
 
     function checkIsVerified(address _user) private view {
         if (!addressToUser[_user].isVerified)
@@ -669,17 +669,18 @@ contract Protocol is
     /// @param _token a collateral token address that is allowed in our Smart Contract
     /// @param _amount the amount of that token you want to get the USD equivalent of.
     /// @return uint256 returns the equivalent amount in USD.
-    function getUsdValue(
+     function getUsdValue(
         address _token,
         uint256 _amount
     ) public view returns (uint256) {
-        AggregatorV3Interface _priceFeed = AggregatorV3Interface(
-            s_priceFeeds[_token]
-        );
-        (, int256 _price, , , ) = _priceFeed.latestRoundData();
-        return
-            ((uint256(_price) * Constants.NEW_PRECISION) * _amount) /
-            Constants.PRECISION;
+        bytes32 feedId = s_priceFeeds[_token];
+        if(feedId == bytes32(0)) revert Protocol__InvalidToken();
+
+        PythStructs.Price memory _priceStruct = pyth.getPrice(feedId);
+    
+        uint256 price = uint256(int256(_priceStruct.price));
+        if (_priceStruct.price < 0) revert Protocol__MustBeMoreThanZero();
+        return ((price * Constants.NEW_PRECISION) * _amount) / Constants.PRECISION;
     }
 
     /// @dev gets all the offers for a particular user
@@ -711,9 +712,9 @@ contract Protocol is
         if (_requestId == 0) revert Protocol__InvalidId();
         if (_requestId >= s_requests.length) revert Protocol__InvalidId();
         Request memory _request = s_requests[_requestId - 1];
-
-        Request memory _requestById = request[_request.author][_requestId];
-        return _requestById;
+        if(_request.author != address(0)) revert Protocol__InvalidAddress();
+      return request[_request.author][_requestId];
+    
     }
 
     /// @dev calculates the loan interest and add it to the loam
@@ -780,8 +781,9 @@ contract Protocol is
     function initialize(
         address _initialOwner,
         address[] memory _tokens,
-        address[] memory _priceFeeds,
-        address _peerAddress
+        bytes32[] memory _priceFeeds,
+        address _peerAddress,
+        address pythContract
     ) public initializer {
         __Ownable_init(_initialOwner);
         if (_tokens.length != _priceFeeds.length) {
@@ -793,6 +795,7 @@ contract Protocol is
             s_collateralToken.push(_tokens[i]);
         }
         s_PEER = PeerToken(_peerAddress);
+        pyth = IPyth(pythContract);
      
     }
     /// @dev Assist with upgradable proxy

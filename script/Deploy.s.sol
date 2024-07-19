@@ -12,8 +12,6 @@ import {Governance} from "../src/Governance.sol";
 // import {IProtocolTest} from "../IProtocolTest.sol";
 import "../src/Libraries/Errors.sol";
 
-// deployment script
-// forge script ./script/Deploy.s.sol --broadcast -vvvv --account <wallet-account> --sender <sender-address>
 
 contract DeployScript is Script {
     PeerToken peerToken;
@@ -22,34 +20,43 @@ contract DeployScript is Script {
 
     ERC1967Proxy proxy;
 
-    address[] _tokenAddresses;
-    address[] _priceFeedAddresses;
+    bytes32[] priceFeeds;
+    address[] tokens;
+    address pythAddr = 0xA2aa501b19aff244D90cc15a4Cf739D2725B5729;
 
-    // address daiToken = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    // address USDCAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    // // address WETHAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    bytes32 public DAIUSD =
+        bytes32(
+            0x87a67534df591d2dd5ec577ab3c75668a8e3d35e92e27bf29d9e2e52df8de412
+        );
+    bytes32 public LINKUSD =
+        bytes32(
+            0x83be4ed61dd8a3518d198098ce37240c494710a7b9d85e35d9fceac21df08994
+        );
+    bytes32 public WBTCUSD =
+        bytes32(
+            0xea0459ab2954676022baaceadb472c1acc97888062864aa23e9771bae3ff36ed
+        );
+    bytes32 public USDCUSD =
+        bytes32(
+            0x41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722
+        );
+    address public DAI = 0x57a8f8b6eD04e92f053C19EFbF1ab8C0314Fe7b0;
+    address public LINK = 0x1Fb9EEe6DF9cf79968D2b558AeDE454384498e2a;
+    address public WBTC = 0x45d341D33624Cc53B1E61f73C076f8A545DA191D;
+    address public USDC = 0x1Fb9EEe6DF9cf79968D2b558AeDE454384498e2a;
 
-    //SEPOLIA TESTNET ADDRESSES
-    // address daiToken = 0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6;
-    address linkToken = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
-    // address USDCToken = 0xf08A50178dfcDe18524640EA6618a1f965821715;
 
-    address daiPriceFeed = 0xD1092a65338d049DB68D7Be6bD89d17a0929945e;
-    address linkPriceFeed = 0xb113F5A928BCfF189C998ab20d753a47F9dE5A61;
-    // address usdcPriceFeed = 0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E;
-    // address WETHPriceFeed = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; //ETH-USD
 
     function setUp() public {
-        // _tokenAddresses.push(daiToken);
-        _tokenAddresses.push(linkToken);
-        // _tokenAddresses.push(USDCToken);
-        // tokens.push(USDCAddress);
-        // _tokenAddresses.push(WETHAddress);
+         priceFeeds.push(DAIUSD);
+        priceFeeds.push(LINKUSD);
+        priceFeeds.push(WBTCUSD);
+        priceFeeds.push(USDCUSD);
+        tokens.push(DAI);
+        tokens.push(LINK);
+        tokens.push(WBTC);
+        tokens.push(USDC);
 
-        // _priceFeedAddresses.push(daiPriceFeed);
-        _priceFeedAddresses.push(linkPriceFeed);
-        // _priceFeedAddresses.push(usdcPriceFeed);
-        // _priceFeedAddresses.push(WETHPriceFeed);
     }
 
     function run() public {
@@ -66,9 +73,10 @@ contract DeployScript is Script {
                 implementation.initialize,
                 (
                     msg.sender,
-                    _tokenAddresses,
-                    _priceFeedAddresses,
-                    address(peerToken)
+                    tokens,
+                    priceFeeds,
+                    address(peerToken), 
+                    pythAddr
                 )
             )
         );
@@ -80,7 +88,7 @@ contract DeployScript is Script {
 
         Protocol(address(proxy)).addLoanableToken(
             address(peerToken),
-            daiPriceFeed
+            DAIUSD
         );
         console.log("Loanable Token Added");
 

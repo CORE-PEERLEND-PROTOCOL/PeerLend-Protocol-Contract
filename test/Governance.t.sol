@@ -25,7 +25,7 @@ contract GovernanceTest is Test {
     string[] public optionArray;
 
     address[] _tokenAddresses;
-    address[] _priceFeedAddresses;
+    bytes32[] _priceFeedAddresses;
 
     address A = address(0xa);
     address B = address(0xb);
@@ -53,7 +53,8 @@ contract GovernanceTest is Test {
                     owner,
                     _tokenAddresses,
                     _priceFeedAddresses,
-                    address(peerToken)
+                    address(peerToken),
+            0xA2aa501b19aff244D90cc15a4Cf739D2725B5729
                 )
             )
         );

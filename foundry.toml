@@ -7,5 +7,5 @@ verbosity = 5
 [rpc_endpoints]
 sepolia = "${BASE_SEPOLIA_RPC}"
 
-[etherscan]
-sepolia = { key = "${ETHERSCAN_API_KEY}" }
+# [etherscan]
+# sepolia = { key = "${ETHERSCAN_API_KEY}" }
