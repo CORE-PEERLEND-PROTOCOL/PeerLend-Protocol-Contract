@@ -112,4 +112,4 @@ By combining these advanced tools and features, **PeerLend** aims to deliver a u
 - **$PEER address** 0xEFB354B7d482FB0b7fD01e4bDDAE61CBFb7b7Bb5
 - **Governance address** 0xA42A2E1C236BC4100DA8b3A4D68adEb24e9D22A7
 - **Proxy Address** 0x75Ed4Ac64a775815999FcBf007D25AcCD72311f1
-- **Protocol address**git 0x3E6CB45B040Dd06614b4245E29b6ba46db938C45
+- **Protocol address** 0x3E6CB45B040Dd06614b4245E29b6ba46db938C45
