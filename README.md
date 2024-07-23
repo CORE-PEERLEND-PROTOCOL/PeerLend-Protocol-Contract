@@ -109,7 +109,7 @@ Welcome to **PeerLend**, a robust web3 P2P lending and borrowing platform where 
 By combining these advanced tools and features, **PeerLend** aims to deliver a user-centric, secure, and flexible
 
 ## Contract Address
-- **$PEER address** 0xEFB354B7d482FB0b7fD01e4bDDAE61CBFb7b7Bb5
-- **Governance address** 0xA42A2E1C236BC4100DA8b3A4D68adEb24e9D22A7
-- **Proxy Address** 0x75Ed4Ac64a775815999FcBf007D25AcCD72311f1
-- **Protocol address** 0x3E6CB45B040Dd06614b4245E29b6ba46db938C45
+- **$PEER address** 0x8e12a958a0097a039E2969F1bA22a0d828f4A37c
+- **Governance address** 0x9b92e0f07d234F4A220f923B02590374D127d2dB
+- **Proxy Address** 0xAd019957C8E8B1c6067dEE5329a2A872CCF0ca61
+- **Protocol address** 0x3af8c88A63A1d4a6002775A6856ab3c57Ae8bb7C
