@@ -47,6 +47,7 @@ contract Protocol is
     /// @dev Collection of all all the resquest;
     Request[] private s_requests;
 
+
     IPyth pyth;
 
     address[] allAddress;
@@ -669,19 +670,21 @@ contract Protocol is
     /// @param _token a collateral token address that is allowed in our Smart Contract
     /// @param _amount the amount of that token you want to get the USD equivalent of.
     /// @return uint256 returns the equivalent amount in USD.
-     function getUsdValue(
+    function getUsdValue(
         address _token,
         uint256 _amount
     ) public view returns (uint256) {
-        bytes32 feedId = s_priceFeeds[_token];
-        if(feedId == bytes32(0)) revert Protocol__InvalidToken();
 
-        PythStructs.Price memory _priceStruct = pyth.getPrice(feedId);
-    
+        bytes32 feedId = s_priceFeeds[_token];
+        if (feedId == bytes32(0)) revert("Protocol__InvalidToken");
+
+        PythStructs.Price memory _priceStruct = pyth.getPriceUnsafe(feedId);
+
         uint256 price = uint256(int256(_priceStruct.price));
-        if (_priceStruct.price < 0) revert Protocol__MustBeMoreThanZero();
+        if (_priceStruct.price < 0) revert("Protocol__NegativePrice");
         return ((price * Constants.NEW_PRECISION) * _amount) / Constants.PRECISION;
     }
+
 
     /// @dev gets all the offers for a particular user
     /// @param _borrower the user who is trying to borrow
@@ -786,13 +789,16 @@ contract Protocol is
         address pythContract
     ) public initializer {
         __Ownable_init(_initialOwner);
-        if (_tokens.length != _priceFeeds.length) {
+     
+        if (_priceFeeds.length != _tokens.length) {
             revert Protocol__tokensAndPriceFeedsArrayMustBeSameLength();
-        }
-        for (uint8 i = 0; i < _tokens.length; i++) {
-            s_isLoanable[_tokens[i]] = true;
-            s_priceFeeds[_tokens[i]] = _priceFeeds[i];
-            s_collateralToken.push(_tokens[i]);
+            }
+        for (uint i = 0; i < _priceFeeds.length; i++) {
+            if (_tokens[i] != address(0)) {
+                s_isLoanable[_tokens[i]] = true;
+                s_collateralToken.push(_tokens[i]);
+                s_priceFeeds[_tokens[i]] = _priceFeeds[i];
+            }
         }
         s_PEER = PeerToken(_peerAddress);
         pyth = IPyth(pythContract);

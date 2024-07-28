@@ -20,28 +20,35 @@ contract DeployScript is Script {
 
     ERC1967Proxy proxy;
 
-    bytes32[] priceFeeds;
-    address[] tokens;
-    address pythAddr = 0xA2aa501b19aff244D90cc15a4Cf739D2725B5729;
 
     address benjamineAddr = 0xb2b2130b4B83Af141cFc4C5E3dEB1897eB336D79;
 
+    bytes32[] priceFeeds;
+    address[] tokens;
+
     bytes32 public DAIUSD =
         bytes32(
-            0x87a67534df591d2dd5ec577ab3c75668a8e3d35e92e27bf29d9e2e52df8de412
+            0xb0948a5e5313200c632b51bb5ca32f6de0d36e9950a942d19751e833f70dabfd
         );
     bytes32 public LINKUSD =
         bytes32(
-            0x83be4ed61dd8a3518d198098ce37240c494710a7b9d85e35d9fceac21df08994
+            0x8ac0c70fff57e9aefdf5edf44b51d62c2d433653cbb2cf5cc06bb115af04d221
         );
     bytes32 public WBTCUSD =
         bytes32(
-            0xea0459ab2954676022baaceadb472c1acc97888062864aa23e9771bae3ff36ed
+            0xc9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33
         );
     bytes32 public USDCUSD =
         bytes32(
-            0x41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722
+            0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a
         );
+
+      bytes32 public USDTUSD =
+        bytes32(
+            0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b
+        );
+
+
     address public DAI = 0x57a8f8b6eD04e92f053C19EFbF1ab8C0314Fe7b0;
     address public LINK = 0x1Fb9EEe6DF9cf79968D2b558AeDE454384498e2a;
     address public WBTC = 0x45d341D33624Cc53B1E61f73C076f8A545DA191D;
@@ -49,14 +56,13 @@ contract DeployScript is Script {
     address public USDT = 0x3786495F5d8a83B7bacD78E2A0c61ca20722Cce3;
 
 
-
     function setUp() public {
-         priceFeeds.push(DAIUSD);
+        priceFeeds.push(DAIUSD);
         priceFeeds.push(LINKUSD);
         priceFeeds.push(WBTCUSD);
         priceFeeds.push(USDCUSD);
-        priceFeeds.push(USDCUSD);
-
+        priceFeeds.push(USDTUSD);
+        
         tokens.push(DAI);
         tokens.push(LINK);
         tokens.push(WBTC);
@@ -82,7 +88,7 @@ contract DeployScript is Script {
                     tokens,
                     priceFeeds,
                     address(peerToken), 
-                    pythAddr
+                    0x8D254a21b3C86D32F7179855531CE99164721933
                 )
             )
         );
@@ -94,7 +100,7 @@ contract DeployScript is Script {
 
         Protocol(address(proxy)).addLoanableToken(
             address(peerToken),
-            DAIUSD
+            USDCUSD
         );
          
 
@@ -107,4 +113,6 @@ contract DeployScript is Script {
 
         vm.stopBroadcast();
     }
+
 }
+
